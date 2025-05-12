@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>랜덤 음식 추첨기</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+
+        body {
+            background-color: #f9f9f9;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background-color: #FF6B6B;
+            color: white;
+            text-align: center;
+            padding: 30px 0;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #FF6B6B;
+            text-align: center;
+        }
+
+        .tab-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 12px 30px;
+            background-color: #eee;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            margin: 0 10px;
+            font-weight: bold;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background-color: #FF6B6B;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .food-picker {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .result-box {
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            padding: 30px;
+            margin: 20px 0;
+            font-size: 2rem;
+            font-weight: bold;
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .result-box.shake {
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(5px); }
+            50% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+            100% { transform: translateX(0); }
+        }
+
+        button {
+            background-color: #FF6B6B;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin-top: 15px;
+        }
+
+        button:hover {
+            background-color: #e64b4b;
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .reset-button {
+            background-color: #6c757d;
+        }
+
+        .reset-button:hover {
+            background-color: #5a6268;
+        }
+
+        .history {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .history h3 {
+            color: #FF6B6B;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .history-list {
+            list-style: none;
+        }
+
+        .history-list li {
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .history-time {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .error-message {
+            color: #e64b4b;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #777;
+            font-size: 14px;
+        }
+
+        @media (max-width: 600px) {
+            .tab-container {
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .tab {
+                width: 80%;
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>랜덤 음식 추첨기</h1>
+        <p>오늘 뭐 먹지? 고민될 땐 랜덤으로 정해보세요!</p>
+    </header>
+
+    <div class="tab-container">
+        <button class="tab active" onclick="openTab('lunch')">점심</button>
+        <button class="tab" onclick="openTab('dinner')">저녁</button>
+    </div>
+
+    <div id="lunch" class="tab-content active">
+        <div class="food-picker">
+            <h2>오늘 점심 뭐 먹지?</h2>
+            <div class="result-box" id="lunch-result">
+                결과가 여기에 표시됩니다
+            </div>
+            <div class="error-message" id="lunch-error"></div>
+            <div class="button-group">
+                <button id="lunch-button" onclick="pickRandomFood('lunch')">랜덤 점심 추첨하기</button>
+                <button id="lunch-reset" onclick="resetFoodHistory('lunch')" class="reset-button">초기화</button>
+            </div>
+        </div>
+
+        <div class="history">
+            <h3>추첨 기록</h3>
+            <ul class="history-list" id="lunch-history">
+                <!-- 히스토리 아이템이 여기에 추가됩니다 -->
+            </ul>
+        </div>
+    </div>
+
+    <div id="dinner" class="tab-content">
+        <div class="food-picker">
+            <h2>오늘 저녁 뭐 먹지?</h2>
+            <div class="result-box" id="dinner-result">
+                결과가 여기에 표시됩니다
+            </div>
+            <div class="error-message" id="dinner-error"></div>
+            <div class="button-group">
+                <button id="dinner-button" onclick="pickRandomFood('dinner')">랜덤 저녁 추첨하기</button>
+                <button id="dinner-reset" onclick="resetFoodHistory('dinner')" class="reset-button">초기화</button>
+            </div>
+        </div>
+
+        <div class="history">
+            <h3>추첨 기록</h3>
+            <ul class="history-list" id="dinner-history">
+                <!-- 히스토리 아이템이 여기에 추가됩니다 -->
+            </ul>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2025 랜덤 음식 추첨기 - 맛있는 식사 되세요!</p>
+    </footer>
+</div>
+
+<script src="js/main.js"></script>
+</body>
+</html>
