@@ -24,6 +24,8 @@ public class UUIDSessionFilter implements Filter {
         if (session.getAttribute(SESSION_UUID_KEY) == null) {
             String uuid = UUID.randomUUID().toString();
             session.setAttribute(SESSION_UUID_KEY, uuid);
+
+            session.setMaxInactiveInterval(10 * 60);
             System.out.println("New session UUID created: " + uuid);
         }
 

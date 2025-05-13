@@ -1,18 +1,34 @@
-    // 사용자 식별을 위한 UUID 생성 함수
-    function generateUUID() {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-            const r = Math.random() * 16 | 0;
-            const v = c === 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
-        });
-    }
+// 쿠키에서 UUID 추출 함수
+function getUUIDFromCookie() {
+    const match = document.cookie.match(/(?:^|; )uuid=([^;]*)/);
+    return match ? decodeURIComponent(match[1]) : null;
+}
 
-    // 세션 스토리지에서 UUID 가져오기 또는 새로 생성 (로컬 스토리지에서 세션 스토리지로 변경)
-    let userUUID = sessionStorage.getItem('userUUID');
-    if (!userUUID) {
-        userUUID = generateUUID();
-        sessionStorage.setItem('userUUID', userUUID);
+// 사용자 식별을 위한 UUID 생성 함수
+function generateUUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+
+// 쿠키에서 UUID 가져오기
+const uuidFromCookie = getUUIDFromCookie();
+
+// 세션 스토리지에서 UUID 가져오기
+let userUUID = sessionStorage.getItem('userUUID');
+
+// UUID가 다르면 세션 초기화
+if (userUUID !== uuidFromCookie) {
+    sessionStorage.clear();
+    userUUID = uuidFromCookie || generateUUID();
+    sessionStorage.setItem('userUUID', userUUID);
+
+    if (!uuidFromCookie) {
+        document.cookie = `uuid=${userUUID}; path=/; max-age=600`;
     }
+}
 
     // API 기본 URL (실제 서버 주소로 변경해야 함)
     const API_URL = '/api';
