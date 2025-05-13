@@ -16,4 +16,5 @@ public class Food {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
+    private String foodValues;
 }

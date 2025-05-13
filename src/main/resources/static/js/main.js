@@ -55,6 +55,8 @@
         resultBox.textContent = '음식을 추첨 중입니다...';
         errorDiv.textContent = '';
 
+        const foodValues = mealType === 'lunch' ? 0 : 1;
+
         try {
             // API 호출
             const response = await fetch(API_URL, {
@@ -63,7 +65,8 @@
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    uuid: userUUID
+                    uuid: userUUID,
+                    foodValues : foodValues
                 })
             });
 

@@ -1,13 +1,9 @@
 package com.example.project.randomFood.dto;
 
+import lombok.Getter;
+
+@Getter
 public class UUIDRequest {
     private String uuid;
-
-    public String getUuid() {
-        return uuid;
-    }
-
-    public void setUuid(String uuid) {
-        this.uuid = uuid;
-    }
+    private String foodValues;
 }
