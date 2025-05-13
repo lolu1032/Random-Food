@@ -2,8 +2,10 @@ package com.example.project.randomFood.controller;
 import com.example.project.randomFood.domain.Food;
 import com.example.project.randomFood.dto.UUIDRequest;
 import com.example.project.randomFood.service.FoodService;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,5 +25,10 @@ public class FoodController {
     public ResponseEntity<?> resetFoodHistory(@RequestBody UUIDRequest request) {
         foodService.resetUserHistory(request.getUuid());
         return ResponseEntity.ok().build();
+    }
+    @GetMapping("/api/session-uuid")
+    public ResponseEntity<String> getSessionUUID(HttpSession session) {
+        Object uuid = session.getAttribute("user_uuid");
+        return ResponseEntity.ok(uuid != null ? uuid.toString() : "");
     }
 }
