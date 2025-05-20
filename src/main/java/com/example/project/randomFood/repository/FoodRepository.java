@@ -10,13 +10,21 @@ import java.util.Optional;
 
 
 public interface FoodRepository extends JpaRepository<Food, Long> {
-    @Query(value = "SELECT * FROM food " +
-            "WHERE food_values = :foodValues " +
-            "  AND id NOT IN (:pickId) " +
-            "OFFSET FLOOR(RANDOM() * (SELECT COUNT(*) FROM food WHERE food_values = :foodValues AND id NOT IN (:pickId))) " +
-            "LIMIT 1",
-            nativeQuery = true)
-    Food foodRandomPick(@Param("foodValues") String foodValues,@Param("pickId") List<Long> pickId);
+
+    List<Food> findByFoodValuesAndIdNotIn(String foodValues, List<Long> pickId);
+    List<Food> findByFoodValues(String foodValues);
+
+    @Query(value = "SELECT * FROM Food WHERE food_values = :foodValues ORDER BY RANDOM() LIMIT 1", nativeQuery = true)
+    Food findRandomFood(@Param("foodValues") String foodValues);
+
+
+//    @Query(value = "SELECT * FROM food " +
+//            "WHERE food_values = :foodValues " +
+//            "  AND id NOT IN (:pickId) " +
+//            "OFFSET FLOOR(RANDOM() * (SELECT COUNT(*) FROM food WHERE food_values = :foodValues AND id NOT IN (:pickId))) " +
+//            "LIMIT 1",
+//            nativeQuery = true)
+//    Food foodRandomPick(@Param("foodValues") String foodValues,@Param("pickId") List<Long> pickId);
 
 //    @Query("SELECT * FROM food \n" +
 //            "WHERE food_values = :foodValues \n" +
@@ -24,4 +32,5 @@ public interface FoodRepository extends JpaRepository<Food, Long> {
 //            "OFFSET FLOOR(RANDOM() * (SELECT COUNT(*) FROM food WHERE food_values = :foodValues AND id NOT IN (:pickId))) \n" +
 //            "LIMIT 1")
 //    Food foodRandomPick(@Param("foodValues") String foodValues,@Param("pickId") List<Long> pickId);
+
 }

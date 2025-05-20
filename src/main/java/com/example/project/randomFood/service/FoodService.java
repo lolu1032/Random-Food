@@ -15,18 +15,12 @@ public class FoodService {
 
     private final FoodRepository foodRepository;
     private final Map<String, Set<Long>> userPickedFoods = new ConcurrentHashMap<>();
-    private final Random random = new Random();
 
     public Food randomFood(UUIDRequest request) {
-        Set<Long> picked = userPickedFoods.computeIfAbsent(request.getUuid(), k -> new HashSet<>());
-        Food food = foodRepository.foodRandomPick(request.getFoodValues(), picked.isEmpty() ? List.of(-1L) : new ArrayList<>(picked) );
-
-        if(food == null) {
-            throw new RuntimeException("더 이상 선택할 수 있는 음식이 없습니다.");
-        }
-        picked.add(food.getId());
-        return food;
+        return foodRepository.findRandomFood(request.getFoodValues());
     }
+
+
     public void resetUserHistory(String uuid) {
         userPickedFoods.remove(uuid);
     }
