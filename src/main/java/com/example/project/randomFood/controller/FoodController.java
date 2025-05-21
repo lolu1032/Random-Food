@@ -15,7 +15,7 @@ public class FoodController {
     private final FoodService foodService;
 
     @PostMapping("/api")
-    public Food randomFood(@RequestBody UUIDRequest request) {
+    public ResponseEntity<Food> randomFood(@RequestBody UUIDRequest request) {
         return foodService.randomFood(request);
     }
     @PostMapping("/api/reset")

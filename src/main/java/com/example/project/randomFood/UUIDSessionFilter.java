@@ -26,7 +26,6 @@ public class UUIDSessionFilter implements Filter {
             session.setAttribute(SESSION_UUID_KEY, uuid);
 
             session.setMaxInactiveInterval(10 * 60);
-            System.out.println("New session UUID created: " + uuid);
         }
 
         chain.doFilter(request, response);
