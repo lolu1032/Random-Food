@@ -1,5 +1,6 @@
 package com.example.project.randomFood.controller;
 import com.example.project.randomFood.domain.Food;
+import com.example.project.randomFood.domain.FoodHistory;
 import com.example.project.randomFood.dto.UUIDRequest;
 import com.example.project.randomFood.service.FoodService;
 import jakarta.servlet.http.HttpSession;
@@ -10,23 +11,32 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequestMapping("/api")
 @RequiredArgsConstructor
 public class FoodController {
     private final FoodService foodService;
 
-    @PostMapping("/api")
-    public ResponseEntity<Food> randomFood(@RequestBody UUIDRequest request) {
-        return foodService.randomFood(request);
+    @GetMapping("/history")
+    public ResponseEntity<List<FoodHistory>> foodHistory(@RequestParam String foodValues, HttpSession session) {
+        List<FoodHistory> history = foodService.getHistory(foodValues, session);
+        return ResponseEntity.ok(history);
     }
-    @PostMapping("/api/reset")
-    public ResponseEntity<?> resetFoodHistory(@RequestBody UUIDRequest request) {
-        foodService.resetUserHistory(request.getUuid());
+    @PostMapping()
+    public ResponseEntity<Food> randomFood(@RequestBody UUIDRequest request,HttpSession session) {
+        Food food = foodService.randomFood(request, session);
+        foodService.addFoodToHistory(session, food, request.getFoodValues());
+        return ResponseEntity.ok(food);
+    }
+    @PostMapping("/reset")
+    public ResponseEntity<?> resetFoodHistory(HttpSession session) {
+        foodService.resetFoodHistory(session);
         return ResponseEntity.ok().build();
     }
-    @GetMapping("/api/session-uuid")
-    public ResponseEntity<String> getSessionUUID(HttpSession session) {
-        Object uuid = session.getAttribute("user_uuid");
-        return ResponseEntity.ok(uuid != null ? uuid.toString() : "");
+    @GetMapping("/expire")
+    public ResponseEntity<?> resetSession(HttpSession session) {
+        foodService.resetSession(session);
+        return ResponseEntity.ok().build();
     }
+
 
 }
