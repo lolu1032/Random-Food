@@ -1,164 +1,133 @@
-let currentTab = 'lunch';
-let isLoading = false;
+document.addEventListener("DOMContentLoaded", () => {
+    const tabs = document.querySelectorAll(".tab");
+    const tabContents = document.querySelectorAll(".tab-content");
 
-document.addEventListener('DOMContentLoaded', function() {
-    loadHistory('lunch');
-    loadHistory('dinner');
-});
+    const UUID_KEY = "randomFoodUuid";
+    const HISTORY_KEY_PREFIX = "randomFoodHistory_";
 
-function openTab(tabName) {
-    const tabContents = document.querySelectorAll('.tab-content');
-    tabContents.forEach(content => content.classList.remove('active'));
-
-    const tabs = document.querySelectorAll('.tab');
-    tabs.forEach(tab => tab.classList.remove('active'));
-
-    document.getElementById(tabName).classList.add('active');
-    event.target.classList.add('active');
-
-    currentTab = tabName;
-    loadHistory(tabName);
-}
-
-async function pickRandomFood(mealType) {
-    if (isLoading) return;
-
-    const button = document.getElementById(`${mealType}-button`);
-    const resultBox = document.getElementById(`${mealType}-result`);
-    const errorDiv = document.getElementById(`${mealType}-error`);
-
-    isLoading = true;
-    button.disabled = true;
-    button.textContent = '추첨 중...';
-    errorDiv.textContent = '';
-
-    resultBox.classList.add('shake');
-    resultBox.textContent = '추첨 중...';
-
-    try {
-        const foodValues = mealType === 'lunch' ? '0' : '1';
-
-        const response = await fetch('/api', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ foodValues })
-        });
-
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-        const food = await response.json();
-
-        if (food && food.name) {
-            setTimeout(() => {
-                resultBox.textContent = `🍴 ${food.name}`;
-                resultBox.style.color = '#FF6B6B';
-                resultBox.style.fontSize = '2.2rem';
-                loadHistory(mealType);
-            }, 500);
-        } else {
-            throw new Error('음식 데이터를 받아오지 못했습니다.');
+    // UUID 초기화 (수정 불가능하게)
+    const initializeUuid = async () => {
+        if (!localStorage.getItem(UUID_KEY)) {
+            try {
+                const response = await fetch("/uuid");
+                const uuid = await response.text();
+                localStorage.setItem(UUID_KEY, uuid);
+            } catch (err) {
+                console.error("UUID 요청 실패", err);
+            }
         }
-    } catch (error) {
-        console.error('Error:', error);
-        resultBox.textContent = '오류가 발생했습니다';
-        resultBox.style.color = '#e64b4b';
-        errorDiv.textContent = '서버 연결에 문제가 있습니다. 잠시 후 다시 시도해주세요.';
-    } finally {
-        isLoading = false;
-        button.disabled = false;
-        button.textContent = `랜덤 ${mealType === 'lunch' ? '점심' : '저녁'} 추첨하기`;
-        setTimeout(() => {
-            resultBox.classList.remove('shake');
-        }, 500);
-    }
-}
+    };
 
-async function loadHistory(mealType) {
-    try {
-        const foodValues = mealType === 'lunch' ? '0' : '1';
-
-        const response = await fetch(`/api/history?foodValues=${foodValues}`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
+    // 탭 전환
+    tabs.forEach((tab, index) => {
+        tab.addEventListener("click", () => {
+            tabs.forEach(t => t.classList.remove("active"));
+            tabContents.forEach(c => c.classList.remove("active"));
+            tab.classList.add("active");
+            tabContents[index].classList.add("active");
         });
+    });
 
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    // 공통 함수들
+    const updateResult = (resultBox, foodName) => {
+        resultBox.textContent = foodName;
+    };
 
-        const history = await response.json();
-        displayHistory(mealType, history);
-    } catch (error) {
-        console.error('History load error:', error);
-        document.getElementById(`${mealType}-history`).innerHTML = '<li style="color: #888;">히스토리를 불러올 수 없습니다.</li>';
-    }
-}
+    const addHistoryItem = (listEl, foodName) => {
+        const li = document.createElement("li");
+        li.textContent = foodName;
+        listEl.appendChild(li);
+    };
 
-function displayHistory(mealType, history) {
-    const historyList = document.getElementById(`${mealType}-history`);
+    const saveToHistory = (typeStr, foodName) => {
+        const key = HISTORY_KEY_PREFIX + typeStr;
+        const history = JSON.parse(localStorage.getItem(key)) || [];
+        history.push(foodName);
+        localStorage.setItem(key, JSON.stringify(history));
+    };
 
-    if (!history || history.length === 0) {
-        historyList.innerHTML = '<li style="color: #888;">아직 추첨 기록이 없습니다.</li>';
-        return;
-    }
+    const loadHistory = (typeStr, listEl) => {
+        const key = HISTORY_KEY_PREFIX + typeStr;
+        const history = JSON.parse(localStorage.getItem(key)) || [];
+        listEl.innerHTML = "";
+        history.forEach(name => addHistoryItem(listEl, name));
+    };
 
-    const sortedHistory = history.sort((a, b) => new Date(b.time) - new Date(a.time));
+    const clearHistory = (typeStr, listEl) => {
+        const key = HISTORY_KEY_PREFIX + typeStr;
+        localStorage.removeItem(key);
+        listEl.innerHTML = "";
+    };
 
-    historyList.innerHTML = sortedHistory.map(item => {
-        const time = new Date(item.time);
-        const timeString = time.toLocaleString('ko-KR', {
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
+    // 숫자 type -> 문자열 type 변환 헬퍼
+    const typeNumToStr = (typeNum) => {
+        return typeNum === 0 ? "lunch" : "dinner";
+    };
+
+    // 버튼 핸들링
+    const handlePick = async (typeNum) => {
+        const uuid = localStorage.getItem(UUID_KEY);
+        const typeStr = typeNumToStr(typeNum);
+
+        const resultBox = document.getElementById(`${typeStr}-result`);
+        const historyList = document.getElementById(`${typeStr}-history`);
+        const errorBox = document.getElementById(`${typeStr}-error`);
+        errorBox.textContent = "";
+
+        try {
+            const response = await fetch("/api", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ uuid, type: typeNum })
+            });
+
+            if (!response.ok) {
+                let errorMessage = "음식을 불러오는 데 실패했습니다.";
+                try {
+                    const errData = await response.json();
+                    if (errData.message) {
+                        errorMessage = errData.message;
+                    }
+                } catch {}
+
+                throw new Error(errorMessage);
+            }
+
+            const data = await response.json();
+            const foodName = data.food.name;
+
+            updateResult(resultBox, foodName);
+            addHistoryItem(historyList, foodName);
+            saveToHistory(typeStr, foodName);
+
+        } catch (err) {
+            console.error(err);
+            errorBox.textContent = err.message;
+        }
+    };
+
+    // 초기화 버튼
+    const setupResetButton = (typeStr) => {
+        document.getElementById(`${typeStr}-reset`).addEventListener("click", () => {
+            const list = document.getElementById(`${typeStr}-history`);
+            clearHistory(typeStr, list);
+            document.getElementById(`${typeStr}-result`).textContent = "결과가 여기에 표시됩니다";
         });
+    };
 
-        return `<li><span>🍴 ${item.food}</span><span class="history-time">${timeString}</span></li>`;
-    }).join('');
-}
+    // 초기화
+    (async () => {
+        await initializeUuid();
 
-async function resetFoodHistory(mealType) {
-    if (!confirm(`${mealType === 'lunch' ? '점심' : '저녁'} 추첨 기록을 모두 삭제하시겠습니까?`)) return;
+        loadHistory("lunch", document.getElementById("lunch-history"));
+        loadHistory("dinner", document.getElementById("dinner-history"));
 
-    const resetButton = document.getElementById(`${mealType}-reset`);
-    const originalText = resetButton.textContent;
+        document.getElementById("lunch-button").addEventListener("click", () => handlePick(0));  // 점심: 0
+        document.getElementById("dinner-button").addEventListener("click", () => handlePick(1)); // 저녁: 1
 
-    try {
-        resetButton.disabled = true;
-        resetButton.textContent = '초기화 중...';
-
-        const response = await fetch('/api/reset', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-        });
-
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-        loadHistory(mealType);
-        const resultBox = document.getElementById(`${mealType}-result`);
-        resultBox.textContent = '결과가 여기에 표시됩니다';
-        resultBox.style.color = '#333';
-        resultBox.style.fontSize = '2rem';
-        document.getElementById(`${mealType}-error`).textContent = '';
-    } catch (error) {
-        console.error('Reset error:', error);
-        alert('초기화 중 오류가 발생했습니다. 다시 시도해주세요.');
-    } finally {
-        resetButton.disabled = false;
-        resetButton.textContent = originalText;
-    }
-}
-
-function showError(mealType, message) {
-    const errorDiv = document.getElementById(`${mealType}-error`);
-    errorDiv.textContent = message;
-    setTimeout(() => { errorDiv.textContent = ''; }, 3000);
-}
-
-window.addEventListener('online', () => {
-    loadHistory(currentTab);
-});
-
-window.addEventListener('offline', () => {
-    showError(currentTab, '인터넷 연결이 끊어졌습니다.');
+        setupResetButton("lunch");
+        setupResetButton("dinner");
+    })();
 });

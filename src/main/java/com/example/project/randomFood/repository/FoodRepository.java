@@ -10,12 +10,19 @@ import java.util.Optional;
 
 
 public interface FoodRepository extends JpaRepository<Food, Long> {
+
     @Query(value = """
     SELECT * FROM food
     WHERE food_values = :foodValues
       AND (:#{#pickId.isEmpty()} = true OR id NOT IN (:pickId))
     """, nativeQuery = true)
     List<Food> findCandidates(@Param("foodValues") String foodValues, @Param("pickId") List<Long> pickId);
+//    @Query(value = """
+//        SELECT * FROM food
+//        WHERE food_values = :type
+//          AND id NOT IN (:pickId)
+//        """, nativeQuery = true)
+//    List<Food> findCandidates(@Param("type") String type, @Param("pickId") List<Long> pickId);
 
 //    List<Food> findByFoodValuesAndIdNotIn(String foodValues, List<Long> pickId);
 //    List<Food> findByFoodValues(String foodValues);

@@ -1,7 +1,4 @@
 spring:
-  servlet:
-    session:
-      timeout: 5m
   config:
     import: optional:file:.env
   datasource:
