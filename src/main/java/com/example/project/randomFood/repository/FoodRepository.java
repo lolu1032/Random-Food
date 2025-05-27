@@ -25,7 +25,7 @@ public interface FoodRepository extends JpaRepository<Food, Long> {
 //    List<Food> findCandidates(@Param("type") String type, @Param("pickId") List<Long> pickId);
 
 //    List<Food> findByFoodValuesAndIdNotIn(String foodValues, List<Long> pickId);
-//    List<Food> findByFoodValues(String foodValues);
+    List<Food> findByFoodValues(String foodValues);
 
 //    @Query(value = "SELECT * FROM Food WHERE food_values = :foodValues ORDER BY RANDOM() LIMIT 1", nativeQuery = true)
 //    Food findRandomFood(@Param("foodValues") String foodValues);
