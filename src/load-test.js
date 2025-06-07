@@ -3,7 +3,7 @@ import { sleep } from 'k6';
 
 export let options = {
     duration: '1m',     // 테스트 지속 시간
-    vus: 500            // 동시에 실행될 VU 수
+    vus: 9000            // 동시에 실행될 VU 수
 };
 
 // 테스트 중 매 VU에 고유한 UUID 부여 (고정된 VU ID 사용)

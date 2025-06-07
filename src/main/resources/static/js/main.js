@@ -33,19 +33,32 @@ document.addEventListener("DOMContentLoaded", () => {
         resultBox.textContent = foodName;
     };
 
-    const addHistoryItem = (listEl, foodName) => {
-        const li = document.createElement("li");
-        li.textContent = foodName;
-        listEl.appendChild(li);
-    };
+const MAX_HISTORY_LENGTH = 8;
 
-    const saveToHistory = (typeStr, foodName) => {
-        const key = HISTORY_KEY_PREFIX + typeStr;
-        const history = JSON.parse(localStorage.getItem(key)) || [];
-        history.push(foodName);
-        localStorage.setItem(key, JSON.stringify(history));
-    };
+const saveToHistory = (typeStr, foodName) => {
+    const key = HISTORY_KEY_PREFIX + typeStr;
+    let history = JSON.parse(localStorage.getItem(key)) || [];
 
+    // 새 음식 추가 후, 오래된 항목 잘라냄
+    history.push(foodName);
+    if (history.length > MAX_HISTORY_LENGTH) {
+        history = history.slice(-MAX_HISTORY_LENGTH);
+    }
+
+    localStorage.setItem(key, JSON.stringify(history));
+};
+
+const addHistoryItem = (listEl, foodName) => {
+    // 새 항목 추가
+    const li = document.createElement("li");
+    li.textContent = foodName;
+    listEl.appendChild(li);
+
+    // 8개 초과 시, 맨 앞 항목 제거
+    while (listEl.children.length > MAX_HISTORY_LENGTH) {
+        listEl.removeChild(listEl.firstChild);
+    }
+};
     const loadHistory = (typeStr, listEl) => {
         const key = HISTORY_KEY_PREFIX + typeStr;
         const history = JSON.parse(localStorage.getItem(key)) || [];
